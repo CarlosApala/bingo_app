@@ -44,6 +44,7 @@ dependencies:
   particle_field: ^1.0.0
   rnd: ^0.2.0
   particles_fly: ^0.0.8
+  flutter_radio_slider: ^0.1.0
 
 dev_dependencies:
   flutter_test:

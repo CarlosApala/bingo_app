@@ -22,15 +22,4 @@ class HomeState extends Equatable {
   @override
   // TODO: implement props
   List<Object?> get props => [listCard, estados, valores, valoresMarcados];
-
-  /* void createListCardButton() {
-
-  
-    for (var i = 0; i < 27; i++) {
-      listCard![1]!.add(BotonCalculador(
-        editar: false,
-        numero: i.toString(),
-      ));
-    }
-  } */
 }

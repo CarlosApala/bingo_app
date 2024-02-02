@@ -1,8 +1,10 @@
 import 'package:bingo_app/presentation/bloc/bloc/home_bloc.dart';
 import 'package:bingo_app/widgets/card_bingo.dart';
+import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_radio_slider/flutter_radio_slider.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 import 'package:particles_fly/particles_fly.dart';
 
@@ -18,16 +20,153 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool esperar = false;
   bool? _conect = false;
-
+  double _currentSliderRowValue = 1;
+  double _currentSliderColumnValue = 1;
+  List<Widget> cartas = [];
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+
+    int multiCartas =
+        _currentSliderColumnValue.toInt() * _currentSliderRowValue.toInt();
+
+    cartas.clear();
+    for (var i = 0; i < multiCartas; i++) {
+      cartas.add(FormCard());
+    }
 
     return BlocBuilder<HomeBloc, HomeState>(
       builder: (context, state) {
         _conect = state.listCard!.length == 0 ? true : false;
 
         return Scaffold(
+            drawer: SafeArea(
+              child: Drawer(
+                  child: Column(
+                children: [
+                  Text(
+                    'Configuraciones',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+                  ),
+                  Divider(),
+                  Column(
+                    children: [
+                      Text(
+                        'Seleccione...',
+                        style: TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.w500),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                    'Cant. filas',
+                                    style: TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Slider(
+                                    value: _currentSliderRowValue,
+                                    max: 6,
+                                    min: 1,
+                                    divisions: 5,
+                                    label: _currentSliderRowValue
+                                        .round()
+                                        .toString(),
+                                    onChanged: (double value) {
+                                      setState(() {
+                                        _currentSliderRowValue = value;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                    'Cant. Columnas',
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        overflow: TextOverflow.ellipsis),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Slider(
+                                    value: _currentSliderColumnValue,
+                                    max: 6,
+                                    min: 1,
+                                    divisions: 5,
+                                    label: _currentSliderColumnValue
+                                        .round()
+                                        .toString(),
+                                    onChanged: (double value) {
+                                      setState(() {
+                                        _currentSliderColumnValue = value;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: TextFormField(
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                          helperText: 'cant. maxima de numero en el bingo',
+                          label: Text(
+                            'limite de numeros',
+                            style: TextStyle(fontSize: 20),
+                          ),
+                          border: OutlineInputBorder()),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Text('Seleccione la casilla que tendra un comidin'),
+                  Expanded(
+                      child: GridView.count(
+                    crossAxisCount: _currentSliderRowValue.toInt(),
+                    padding: EdgeInsets.all(2),
+                    childAspectRatio: 1,
+                    crossAxisSpacing: 2,
+                    mainAxisSpacing: 2,
+                    children: [...cartas],
+                  )),
+                  ElevatedButton(
+                      onPressed: () {},
+                      child: Text(
+                        'Aceptar',
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Color.fromARGB(255, 181, 252, 50),
+                            fontWeight: FontWeight.bold),
+                      ),
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                              Color.fromARGB(255, 42, 156, 80)))),
+                ],
+              )),
+            ),
             appBar: AppBar(
               title: Text("Bingo", style: TextStyle(color: Colors.white)),
               centerTitle: true,
@@ -106,6 +245,36 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: PageBingo())
             ]));
       },
+    );
+  }
+}
+
+class FormCard extends StatefulWidget {
+  FormCard({
+    super.key,
+  });
+
+  @override
+  State<FormCard> createState() => _FormCardState();
+}
+
+class _FormCardState extends State<FormCard> {
+  bool imageCard = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        imageCard = !imageCard;
+        setState(() {});
+      },
+      child: Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+            color: Colors.purple, borderRadius: BorderRadius.circular(20)),
+        child: imageCard ? Image.asset('assets/bingo.png') : null,
+      ),
     );
   }
 }
