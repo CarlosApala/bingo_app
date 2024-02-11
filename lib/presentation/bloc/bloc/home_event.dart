@@ -4,25 +4,66 @@ part of 'home_bloc.dart';
 abstract class HomeEvent {}
 
 class InsertCardBingo extends HomeEvent {
-  InsertCardBingo();
+  int filas;
+  int column;
+  int limitNum;
+  int numbComodin;
+
+  InsertCardBingo(
+      {required this.column,
+      required this.filas,
+      required this.limitNum,
+      required this.numbComodin});
 }
 
-class OnEvent extends HomeEvent {}
+class OnInit extends HomeEvent {
+  int? cantRow;
+  int? cantColum;
+  int? limitNumber = 90;
+  int? numberComodin;
+  bool? searchAutomatic;
+  OnInit(
+      {required this.cantColum,
+      required this.cantRow,
+      required this.limitNumber,
+      required this.numberComodin,
+      required this.searchAutomatic});
+}
+
+class OnSaveConfiguration extends HomeEvent {
+  int filas;
+  int column;
+  int limitNumber;
+  int numcomdin;
+  bool searchAut;
+  OnSaveConfiguration(
+      {required this.column,
+      required this.filas,
+      required this.limitNumber,
+      required this.numcomdin,
+      required this.searchAut});
+}
+
+class UpdateChargeBingo extends HomeEvent {
+  List<CardBingo> listCa;
+  UpdateChargeBingo({required this.listCa});
+}
 
 class EditCardBingo extends HomeEvent {
-  int numberCard;
+  String numberCard;
   bool edit;
   EditCardBingo({required this.edit, required this.numberCard});
 }
 
 class DeletePageView extends HomeEvent {
-  int numerocard;
+  String numerocard;
   DeletePageView({required this.numerocard});
 }
 
 class EditValores extends HomeEvent {
   List<String> val;
-  EditValores({required this.val});
+  String numberCard;
+  EditValores({required this.val, required this.numberCard});
 }
 
 class OnPressEvent extends HomeEvent {
@@ -48,23 +89,23 @@ class OnValueEvent extends HomeEvent {
 }
 
 class OnInsertListValoresNumeric extends HomeEvent {
-  int numerCard;
-  int numeroButton;
+  String numerCard;
+  /* int numeroButton; */
+  Key key;
   String valorNumeric;
   OnInsertListValoresNumeric(
-      {required this.numerCard,
-      required this.valorNumeric,
-      required this.numeroButton});
+      {required this.valorNumeric,
+      /* required this.numeroButton, */
+      required this.key,
+      required this.numerCard});
 }
 
 class OnInsertListValoresPresionados extends HomeEvent {
-  int numerCard;
-  int numerButton;
+  Key key;
   bool presionado;
+  String valNum;
   OnInsertListValoresPresionados(
-      {required this.numerCard,
-      required this.presionado,
-      required this.numerButton});
+      {required this.presionado, required this.key, required this.valNum});
 }
 
 class OnInsertButtonEvent extends HomeEvent {
@@ -73,7 +114,7 @@ class OnInsertButtonEvent extends HomeEvent {
   OnInsertButtonEvent({required this.lisbton, required this.numerCard});
 }
 
-class OnChangeCardEvent extends HomeEvent {
-  int numeroCard;
+/* class OnChangeCardEvent extends HomeEvent {
+  String numeroCard;
   OnChangeCardEvent({required this.numeroCard});
-}
+} */

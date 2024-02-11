@@ -45,6 +45,8 @@ dependencies:
   rnd: ^0.2.0
   particles_fly: ^0.0.8
   flutter_radio_slider: ^0.1.0
+  shared_preferences: ^2.2.2
+  uuid: ^4.2.2
 
 dev_dependencies:
   flutter_test:

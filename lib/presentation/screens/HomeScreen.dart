@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_radio_slider/flutter_radio_slider.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 import 'package:particles_fly/particles_fly.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../widgets/boton_calculadora.dart';
 
@@ -18,27 +19,59 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  TextEditingController _limintNumber = TextEditingController();
+
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
+  @override
+  void initState() {
+    BlocProvider.of<HomeBloc>(context).add(OnInit(
+        cantColum: 5,
+        cantRow: 5,
+        limitNumber: 75,
+        numberComodin: 12,
+        searchAutomatic: true));
+    super.initState();
+    _limintNumber.text = '75';
+    initSharedPreferences();
+  }
+
+  Future<void> initSharedPreferences() async {
+    final SharedPreferences prefs = await _prefs;
+
+    print(prefs.getString('limit'));
+    _currentSliderColumnValue = prefs.getDouble('column') ?? 5.0;
+    _currentSliderRowValue = prefs.getDouble('filas') ?? 5.0;
+
+    setState(() {});
+  }
+
+  bool imageCard = false;
+  int selectState = 0;
+  bool valueSwitch = false;
+
   bool esperar = false;
   bool? _conect = false;
   double _currentSliderRowValue = 1;
   double _currentSliderColumnValue = 1;
   List<Widget> cartas = [];
+
+  List<Widget> fruits = <Widget>[Text('Automatica'), Text('Manual')];
+  final List<bool> _selectedFruits = <bool>[true, false];
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
-    int multiCartas =
-        _currentSliderColumnValue.toInt() * _currentSliderRowValue.toInt();
-
-    cartas.clear();
-    for (var i = 0; i < multiCartas; i++) {
-      cartas.add(FormCard());
-    }
-
-    return BlocBuilder<HomeBloc, HomeState>(
-      builder: (context, state) {
-        _conect = state.listCard!.length == 0 ? true : false;
-
+    return BlocBuilder<HomeBloc, HomeState>(builder: (context, state) {
+      if (state is HomeState) {
+        final size = MediaQuery.of(context).size;
+        int multiCartas =
+            _currentSliderRowValue.toInt() * _currentSliderRowValue.toInt();
+        cartas.clear();
+        for (var i = 0; i < multiCartas; i++) {
+          cartas.add(FormCard(
+            index: i,
+          ));
+        }
+        _conect = state.listCard == null ? true : false;
         return Scaffold(
             drawer: SafeArea(
               child: Drawer(
@@ -105,16 +138,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Expanded(
                                   flex: 2,
                                   child: Slider(
-                                    value: _currentSliderColumnValue,
+                                    value: _currentSliderRowValue,
                                     max: 6,
                                     min: 1,
                                     divisions: 5,
-                                    label: _currentSliderColumnValue
+                                    label: _currentSliderRowValue
                                         .round()
                                         .toString(),
                                     onChanged: (double value) {
                                       setState(() {
-                                        _currentSliderColumnValue = value;
+                                        _currentSliderRowValue = value;
                                       });
                                     },
                                   ),
@@ -129,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     child: TextFormField(
+                      controller: _limintNumber,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                           helperText: 'cant. maxima de numero en el bingo',
@@ -138,6 +172,37 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           border: OutlineInputBorder()),
                     ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+
+                  /* este codigo solo debe ser desactivado si la logica de esta completado */
+                  Text(
+                    'Seleccione el tipo de Busqueda:',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+                  ),
+                  ToggleButtons(
+                    direction: Axis.horizontal,
+                    onPressed: (int index) {
+                      setState(() {
+                        // The button that is tapped is set to true, and the others to false.
+                        for (int i = 0; i < _selectedFruits.length; i++) {
+                          _selectedFruits[i] = i == index;
+                        }
+                      });
+                    },
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
+                    selectedBorderColor: Colors.green[700],
+                    selectedColor: Colors.white,
+                    fillColor: Colors.green[200],
+                    color: Colors.red[400],
+                    constraints: const BoxConstraints(
+                      minHeight: 40.0,
+                      minWidth: 80.0,
+                    ),
+                    isSelected: _selectedFruits,
+                    children: fruits,
                   ),
                   SizedBox(
                     height: 20,
@@ -153,7 +218,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [...cartas],
                   )),
                   ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        BlocProvider.of<HomeBloc>(context).add(
+                            OnSaveConfiguration(
+                                column: _currentSliderRowValue.toInt(),
+                                filas: _currentSliderRowValue.toInt(),
+                                searchAut: _selectedFruits[0],
+                                limitNumber:
+                                    int.parse(_limintNumber.value.text),
+                                numcomdin: selectState));
+                        Navigator.pop(context);
+                      },
                       child: Text(
                         'Aceptar',
                         style: TextStyle(
@@ -182,15 +257,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: ElevatedButton(
                     onPressed: esperar == false
                         ? () async {
+                            // guardar los cambios que se estaban realizando en una tarjeta, antes de crear una nueva
+
                             for (var element in state.listCard!) {
-                              if (element.editar) {
+                              if (element.editar!) {
                                 showDialog(
                                     context: context,
                                     barrierDismissible: true,
                                     builder: (context) => AlertDialog(
                                           title: Text("Edicion"),
-                                          content: Text(
-                                              "la tarjeta ${element.numberCard + 1}, se edito correctamente"),
+                                          content:
+                                              Text("Se edito correctamente"),
                                           actions: [
                                             ElevatedButton(
                                                 onPressed: () {
@@ -207,14 +284,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                 return;
                               }
                             }
+                            //-------------------------------------fin de guardar-------
+
                             Future.delayed(Duration(milliseconds: 500))
                                 .then((value) {
                               esperar = false;
                               setState(() {});
                             });
 
-                            BlocProvider.of<HomeBloc>(context)
-                                .add(InsertCardBingo());
+                            BlocProvider.of<HomeBloc>(context).add(
+                                InsertCardBingo(
+                                    column: state.cantColum!,
+                                    filas: state.cantRow!,
+                                    limitNum: state.limitNumber!,
+                                    numbComodin: state.numberComodin!));
                             esperar = true;
                           }
                         : null,
@@ -230,41 +313,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               ],
             ),
-            body: Stack(children: [
-              ParticlesFly(
-                height: size.height,
-                width: size.width,
-                speedOfParticles: !_conect! ? 1 : 2,
-                numberOfParticles: 50,
-                maxParticleSize: 15,
-                onTapAnimation: true,
-              ),
-              Container(
-                  width: !_conect! ? double.infinity : 0,
-                  height: !_conect! ? double.infinity : 0,
-                  child: PageBingo())
-            ]));
-      },
-    );
+            body: PageBingo());
+      } else {
+        return Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+    });
   }
-}
 
-class FormCard extends StatefulWidget {
-  FormCard({
-    super.key,
-  });
-
-  @override
-  State<FormCard> createState() => _FormCardState();
-}
-
-class _FormCardState extends State<FormCard> {
-  bool imageCard = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget FormCard({required index}) {
     return GestureDetector(
       onTap: () {
+        selectState = index;
         imageCard = !imageCard;
         setState(() {});
       },
@@ -272,8 +333,19 @@ class _FormCardState extends State<FormCard> {
         width: 10,
         height: 10,
         decoration: BoxDecoration(
-            color: Colors.purple, borderRadius: BorderRadius.circular(20)),
-        child: imageCard ? Image.asset('assets/bingo.png') : null,
+            color: selectState == index
+                ? Color.fromARGB(255, 32, 199, 10)
+                : Colors.purple,
+            borderRadius: BorderRadius.circular(20)),
+        child: selectState == index
+            ? Center(
+                child: Text('Free',
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        color: Color.fromARGB(255, 2, 28, 100))),
+              )
+            : null,
       ),
     );
   }
@@ -309,24 +381,20 @@ class _PageBingoState extends State<PageBingo> {
           _pageController.jumpToPage(state.listCard!.length);
         }
         listBingo = [...state.listCard!];
-
         return Column(
           children: [
             Expanded(
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (value) {
-                  print(value);
-
                   for (var element in listBingo) {
-                    if (element.editar) {
+                    if (element.editar!) {
                       showDialog(
                           context: context,
                           barrierDismissible: true,
                           builder: (context) => AlertDialog(
                                 title: Text("Edicion"),
-                                content: Text(
-                                    "la tarjeta ${element.numberCard + 1}, se edito correctamente"),
+                                content: Text("Se edito correctamente"),
                                 actions: [
                                   ElevatedButton(
                                       onPressed: () {
